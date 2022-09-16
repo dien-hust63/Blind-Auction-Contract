@@ -1,43 +1,43 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.4;
+
 contract BlindAuction {
     struct Bid {
         bytes32 blindedBid;
-        uint deposit;
+        uint256 deposit;
         bytes32 encrypt;
     }
 
     address payable public beneficiary;
-    uint public biddingEnd;
-    uint public revealEnd;
+    uint256 public biddingEnd;
+    uint256 public revealEnd;
     bool public ended;
 
     mapping(address => Bid[]) public bids;
-    mapping(address => uint) public totalDeposit;
+    mapping(address => uint256) public totalDeposit;
     address public highestBidder;
-    uint public highestBid;
+    uint256 public highestBid;
 
-    event AuctionEnded(address winner, uint highestBid);
+    event AuctionEnded(address winner, uint256 highestBid);
 
+    error TooEarly(uint256 time);
 
-    error TooEarly(uint time);
-
-    error TooLate(uint time);
+    error TooLate(uint256 time);
 
     error AuctionEndAlreadyCalled();
 
-    modifier onlyBefore(uint time) {
+    modifier onlyBefore(uint256 time) {
         if (block.timestamp >= time) revert TooLate(time);
         _;
     }
-    modifier onlyAfter(uint time) {
+    modifier onlyAfter(uint256 time) {
         if (block.timestamp <= time) revert TooEarly(time);
         _;
     }
 
     constructor(
-        uint biddingTime,
-        uint revealTime,
+        uint256 biddingTime,
+        uint256 revealTime,
         address payable beneficiaryAddress
     ) {
         beneficiary = beneficiaryAddress;
@@ -45,41 +45,45 @@ contract BlindAuction {
         revealEnd = biddingEnd + revealTime;
     }
 
-    function bid(bytes32 blindedBid,bytes32 encryptKey)
+    function bid(bytes32 blindedBid, bytes32 encryptKey)
         external
         payable
         onlyBefore(biddingEnd)
     {
-        bids[msg.sender].push(Bid({
-            blindedBid: blindedBid,
-            deposit: msg.value,
-            encrypt: encryptKey
-        }));
+        bids[msg.sender].push(
+            Bid({
+                blindedBid: blindedBid,
+                deposit: msg.value,
+                encrypt: encryptKey
+            })
+        );
         totalDeposit[msg.sender] += msg.value;
     }
 
     function reveal(
-        uint[] calldata values,
+        uint256[] calldata values,
         bool[] calldata fakes,
         bytes32[] calldata secrets
-    )
-        external
-        onlyAfter(biddingEnd)
-        onlyBefore(revealEnd)
-    {
-        uint length = bids[msg.sender].length;
+    ) external onlyAfter(biddingEnd) onlyBefore(revealEnd) {
+        uint256 length = bids[msg.sender].length;
         require(values.length == length);
         require(fakes.length == length);
         require(secrets.length == length);
 
-        for (uint i = 0; i < length; i++) {
+        for (uint256 i = 0; i < length; i++) {
             Bid storage bidToCheck = bids[msg.sender][i];
-            (uint value, bool fake, bytes32 secret) =
-                    (values[i], fakes[i], secrets[i]);
-            if(fake){
+            (uint256 value, bool fake, bytes32 secret) = (
+                values[i],
+                fakes[i],
+                secrets[i]
+            );
+            if (fake) {
                 continue;
             }
-            if (bidToCheck.blindedBid != keccak256(abi.encodePacked(value, fake, secret))) {
+            if (
+                bidToCheck.blindedBid !=
+                keccak256(abi.encodePacked(value, fake, secret))
+            ) {
                 continue;
             }
             if (bidToCheck.deposit >= value) {
@@ -89,30 +93,28 @@ contract BlindAuction {
         }
     }
 
-    function withdraw() external onlyAfter(revealEnd){
-        uint amount = totalDeposit[msg.sender];
-        if(msg.sender == highestBidder){
+    function withdraw() external onlyAfter(revealEnd) {
+        uint256 amount = totalDeposit[msg.sender];
+        if (msg.sender == highestBidder) {
             amount -= highestBid;
         }
-        
+
         if (amount > 0) {
             totalDeposit[msg.sender] = 0;
             payable(msg.sender).transfer(amount);
         }
     }
 
-    function auctionEnd()
-        external
-        onlyAfter(revealEnd)
-    {
+    function auctionEnd() external onlyAfter(revealEnd) {
         if (ended) revert AuctionEndAlreadyCalled();
         emit AuctionEnded(highestBidder, highestBid);
         ended = true;
         beneficiary.transfer(highestBid);
     }
 
-    function placeBid(address bidder, uint value) internal
-            returns (bool success)
+    function placeBid(address bidder, uint256 value)
+        internal
+        returns (bool success)
     {
         if (value <= highestBid) {
             return false;
