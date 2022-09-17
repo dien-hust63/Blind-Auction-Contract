@@ -14,6 +14,8 @@ function getNetwork(netId: number) {
       return "Ropsten network";
     case 4:
       return "Rinkeby test network";
+    case 5:
+      return "Goerli test network";
     case 42:
       return "Kovan test network";
     default:
