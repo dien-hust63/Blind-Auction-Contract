@@ -18,7 +18,7 @@ const ImportWalletForm: React.FC<Props> = ({ closeImportWallet, wallet }) => {
   const {
     state: { web3, account },
   } = useWeb3Context();
-  const { addWallet } = useAppContext();
+  //const { addWallet } = useAppContext();
   const [address, setAddressValue] = useState("");
   const [pendingImport, setPendingImport] = useState(false);
   const walletAddr = wallet;
@@ -27,21 +27,21 @@ const ImportWalletForm: React.FC<Props> = ({ closeImportWallet, wallet }) => {
     setAddressValue(e.target.value);
   }
   async function importWallet() {
-    if (web3) {
-      setPendingImport(true);
-      const wallet = await get(web3, account, address);
-      addWallet({
-        name: wallet.name,
-        address: wallet.address,
-        balance: Number(wallet.balance),
-        numConfirmationsRequired: wallet.numConfirmationsRequired,
-      });
-      setPendingImport(false);
-      closeImportWallet();
-      Swal.fire("Import wallet successfully", "", "success");
-    } else {
-      Swal.fire("You must unclock Metamask", "", "warning");
-    }
+    // if (web3) {
+    //   setPendingImport(true);
+    //   const wallet = await get(web3, account, address);
+    //   addWallet({
+    //     name: wallet.name,
+    //     address: wallet.address,
+    //     balance: Number(wallet.balance),
+    //     numConfirmationsRequired: wallet.numConfirmationsRequired,
+    //   });
+    //   setPendingImport(false);
+    //   closeImportWallet();
+    //   Swal.fire("Import wallet successfully", "", "success");
+    // } else {
+    //   Swal.fire("You must unclock Metamask", "", "warning");
+    // }
   }
 
   return (

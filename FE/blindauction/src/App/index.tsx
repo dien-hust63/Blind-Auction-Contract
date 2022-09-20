@@ -31,8 +31,8 @@ function App() {
   } = useWeb3Context();
 
   const {
-    state: { wallets },
-    addWallet,
+    state: { auctions },
+    createBlindAuction,
   } = useAppContext();
 
   const { state, set, updateTokenDetailList } = useMultiSigWalletContext();
@@ -121,7 +121,7 @@ function App() {
           {showMainDisplay ? (
             <div className="main-display">
               <div className="wallet-header">
-                <h2>Wallets</h2>
+                <h2>Blind Auction</h2>
                 <div>
                   <Button
                     inverted
@@ -131,62 +131,23 @@ function App() {
                     Import
                   </Button>
                   <Button inverted color="blue" onClick={openCreateWalletForm}>
-                    Add
+                    Create Auction
                   </Button>
                 </div>
               </div>
               <table className="ui selectable table wallet-table">
                 <thead>
                   <tr>
-                    <th>Name</th>
-                    <th>Address</th>
-                    <th>Balance</th>
-                    <th>Required Confirmations</th>
-                    <th>Action</th>
+                    <th className="th-center">Auction Address</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {wallets.length ? (
-                    wallets.map((wallet) => {
+                {auctions.length ? (
+                    auctions.map((auction) => {
                       return (
-                        <tr key={wallet.address}>
-                          <td
-                            onClick={() => openWalletDetail(wallet.address)}
-                            className="change-detail-link"
-                          >
-                            {wallet.name}
-                          </td>
-                          <td>{wallet.address}</td>
-                          <td>{wallet.balance} ETH</td>
+                        <tr key={auction.beneficiaryAddress}>
                           <td>
-                            <div className="required-confirm">
-                              <div className="number-required">
-                                {wallet.numConfirmationsRequired}
-                              </div>
-                              {/* <Button
-                              color="grey"
-                              onClick={depositWallet}
-                              size="tiny"
-                            >
-                              Edit
-                            </Button> */}
-                            </div>
-                          </td>
-                          <td>
-                            <Button
-                              color="blue"
-                              onClick={(e) => depositWallet(e, wallet.address)}
-                              size="tiny"
-                            >
-                              Deposit
-                            </Button>
-                            <Button
-                              color="grey"
-                              onClick={(e) => withdrawWallet(e, wallet.address)}
-                              size="tiny"
-                            >
-                              Withdraw
-                            </Button>
+                            {auction.biddingTime}
                           </td>
                         </tr>
                       );
@@ -194,7 +155,7 @@ function App() {
                   ) : (
                     <tr>
                       <td colSpan={7} style={{ textAlign: "center" }}>
-                        Chưa có ví nào.
+                        There are no records.
                       </td>
                     </tr>
                   )}

@@ -16,7 +16,7 @@ const Header: React.FC<Props> = ({ backMainDisplay }) => {
   } = useWeb3Context();
 
   const {
-    state: { wallets },
+    state: { auctions },
     set,
   } = useAppContext();
 
@@ -48,7 +48,7 @@ const Header: React.FC<Props> = ({ backMainDisplay }) => {
       <Menu pointing inverted>
         <div className="wallet-icon"></div>
         <Menu.Item
-          name="wallets"
+          name="Blind Auction"
           active={activeItem === "wallets"}
           onClick={() => handleItemClick("wallets")}
         />

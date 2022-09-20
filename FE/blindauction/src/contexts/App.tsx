@@ -10,7 +10,7 @@ import React, {
 import { useWeb3Context } from "./Web3";
 import { get as getMultiSigWallet, subscribe } from "../api/wallet";
 interface State {
-  wallets: Wallet[];
+  auctions: Auction[];
 }
 
 interface Wallet {
@@ -21,18 +21,11 @@ interface Wallet {
 }
 
 const INIT_STATE: State = {
-  wallets: [
-    // {
-    //   name: "DKT",
-    //   address: "0xc2eec85f0f3463231017748c52547f1c14e923ad",
-    //   balance: 100,
-    //   numConfirmationsRequired: 2,
-    // },
-  ],
+  auctions:[]
 };
 
 const SET = "SET";
-const ADD_WALLET = "ADD_WALLET";
+const ADD_AUCTION = "ADD_AUCTION";
 const UPDATE_WALLET = "UPDATE_WALLET";
 const UPDATE_BALANCE = "UPDATE_BALANCE";
 
@@ -42,14 +35,17 @@ interface Set {
     wallets: Wallet[];
   };
 }
-
-interface AddWallet {
-  type: "ADD_WALLET";
+interface Auction{
+  biddingTime: number;
+  revealTime: number;
+  beneficiaryAddress: string;
+}
+interface AddBlindAuction {
+  type: "ADD_AUCTION";
   data: {
-    name: string;
-    address: string;
-    balance: number;
-    numConfirmationsRequired: number;
+    biddingTime: number;
+    revealTime: number;
+    beneficiaryAddress: string;
   };
 }
 
@@ -71,7 +67,7 @@ interface UpdateBalance {
   };
 }
 
-type Action = Set | AddWallet | UpdateWallet | UpdateBalance;
+type Action = Set | AddBlindAuction | UpdateWallet | UpdateBalance;
 
 function reducer(state: State = INIT_STATE, action: Action) {
   switch (action.type) {
@@ -81,40 +77,40 @@ function reducer(state: State = INIT_STATE, action: Action) {
         ...action.data,
       };
     }
-    case ADD_WALLET: {
+    case ADD_AUCTION: {
       localStorage.setItem(
-        "wallet",
+        "auctions",
         JSON.stringify({
           ...state,
-          wallets: [...state.wallets, action.data],
+          wallets: [...state.auctions, action.data],
         })
       );
       return {
         ...state,
-        wallets: [...state.wallets, action.data],
+        wallets: [...state.auctions, action.data],
       };
     }
     case UPDATE_BALANCE: {
-      let curWallet = state.wallets;
-      let index = curWallet.findIndex((x) => x.address == action.data.address);
-      if (index >= 0) {
-        curWallet[index].balance += action.data.balance;
-      }
-      return {
-        ...state,
-        wallets: [...curWallet],
-      };
+      // let curWallet = state.auctions;
+      // let index = curWallet.findIndex((x) => x.address == action.data.address);
+      // if (index >= 0) {
+      //   curWallet[index].balance += action.data.balance;
+      // }
+      // return {
+      //   ...state,
+      //   wallets: [...curWallet],
+      // };
     }
     case UPDATE_WALLET: {
-      let curWallet = state.wallets;
-      let index = curWallet.findIndex((x) => x.address == action.data.address);
-      if (index >= 0) {
-        curWallet[index] = { ...action.data };
-      }
-      return {
-        ...state,
-        wallets: [...curWallet],
-      };
+      // let curWallet = state.auctions;
+      // let index = curWallet.findIndex((x) => x.address == action.data.address);
+      // if (index >= 0) {
+      //   curWallet[index] = { ...action.data };
+      // }
+      // return {
+      //   ...state,
+      //   wallets: [...curWallet],
+      // };
     }
     default: {
       return {
@@ -127,11 +123,10 @@ interface SetInputs {
   wallets: Wallet[];
 }
 
-interface AddWalletInputs {
-  name: string;
-  address: string;
-  balance: number;
-  numConfirmationsRequired: number;
+interface CreateAuctionInputs {
+  biddingTime: number;
+  revealTime: number;
+  beneficiaryAddress: string;
 }
 interface UpdateBalanceInputs {
   address: string;
@@ -140,8 +135,8 @@ interface UpdateBalanceInputs {
 const AppContext = createContext({
   state: INIT_STATE,
   set: (_data: SetInputs) => {},
-  addWallet: (_data: AddWalletInputs) => {},
-  updateWallet: (_data: AddWalletInputs) => {},
+  createBlindAuction: (_data: CreateAuctionInputs) => {},
+  updateWallet: (_data: CreateAuctionInputs) => {},
   updateBalanceWallet: (_data: UpdateBalanceInputs) => {},
 });
 
@@ -161,18 +156,19 @@ export const Provider: React.FC<ProviderProps> = ({ children }) => {
     });
   }
 
-  function addWallet(data: AddWalletInputs) {
+  function createBlindAuction(data: CreateAuctionInputs) {
     dispatch({
-      type: ADD_WALLET,
+      type: ADD_AUCTION,
       data,
     });
   }
 
-  function updateWallet(data: AddWalletInputs) {
-    dispatch({
-      type: UPDATE_WALLET,
-      data,
-    });
+
+  function updateWallet(data: CreateAuctionInputs) {
+    // dispatch({
+    //   type: UPDATE_WALLET,
+    //   data,
+    // });
   }
 
   function updateBalanceWallet(data: UpdateBalanceInputs) {
@@ -188,7 +184,7 @@ export const Provider: React.FC<ProviderProps> = ({ children }) => {
         () => ({
           state,
           set,
-          addWallet,
+          createBlindAuction,
           updateWallet,
           updateBalanceWallet,
         }),
@@ -205,7 +201,7 @@ export function Updater() {
     state: { web3, account },
   } = useWeb3Context();
 
-  const { state, set, addWallet } = useAppContext();
+  const { state, set, createBlindAuction } = useAppContext();
 
   useEffect(() => {
     async function get(web3: Web3, account: string) {

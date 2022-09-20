@@ -66,3 +66,7 @@
 .number-required{
   margin-right: 10px;
 }
+
+.th-center{
+  text-align: center !important;
+}

@@ -7,7 +7,7 @@ import { useAppContext } from "../../contexts/App";
 import useAsync from "../../components/useAsync";
 import { deposit } from "../../api/wallet";
 import "../../css/form/createwallet.css";
-import { createWallet } from "../../api/wallet";
+import { createBlindAuction } from "../../api/blindauction";
 import Swal from "sweetalert2";
 interface Props {
   closeCreateWalletForm: () => void;
@@ -43,111 +43,36 @@ const CreateWalletForm: React.FC<Props> = ({ closeCreateWalletForm }) => {
   } = useWeb3Context();
 
   const {
-    state: { wallets },
-    addWallet,
+    state: { auctions },
   } = useAppContext();
 
-  const [name, setName] = useState("");
-  const [requiredConfirmarion, setRequiredConfirmation] = useState(0);
-  const [pendingCreateWallet, setPendingCreateWallet] = useState(false);
-  const [owners, setOwners] = useState<Owners[]>([
-    {
-      name: "My Account",
-      address: account,
-    },
-  ]);
-  // const { pending, call } = useAsync<depositParams, void>(
-  //   ({ web3, account, value, wallet }) =>
-  //     deposit(web3, account, { value, wallet })
-  // );
+  const [name, setName] = useState(0);
+  const [biddingTime, setBiddingTime] = useState(0);
+  const [revealTime, setRevealTime] = useState(0);
+  const [beneficiaryAddress, setBeneficiaryAddress] = useState(account);
+  const [pendingCreate, setPendingCreate] = useState(false);
 
-  const {
-    pending: walletP,
-    error: walletErr,
-    call: walletCall,
-  } = useAsync<CreateWalletParams, any>(async (params) => {
-    if (!web3) {
-      throw new Error("No web3");
-    }
-    return await createWallet(web3, account, params);
-  });
-
-  function changeName(e: React.ChangeEvent<HTMLInputElement>) {
-    setName(e.target.value);
+  function changeBiddingTime(e: React.ChangeEvent<HTMLInputElement>) {
+    setBiddingTime(Number(e.target.value));
   }
-
-  function changeRequiredConfirmation(e: React.ChangeEvent<HTMLInputElement>) {
-    setRequiredConfirmation(Number(e.target.value));
+  function changeBeneficiaryAddress(e: React.ChangeEvent<HTMLInputElement>) {
+    setBeneficiaryAddress(e.target.value);
   }
-  function addOwner() {
-    setOwners([
-      ...owners,
-      {
-        name: "",
-        address: "",
-      },
-    ]);
+  function changeRevealTime(e: React.ChangeEvent<HTMLInputElement>) {
+    setRevealTime(Number(e.target.value));
   }
-
-  function removeOwner(index: number) {
-    let listOwners = [...owners];
-    listOwners.splice(index, 1);
-    setOwners(listOwners);
-  }
-
-  function changeOwnerName(
-    e: React.ChangeEvent<HTMLInputElement>,
-    index: number
-  ) {
-    let listOwners = [...owners];
-    listOwners[index].name = e.target.value;
-    setOwners(listOwners);
-  }
-
-  function changeOwnerAddress(
-    e: React.ChangeEvent<HTMLInputElement>,
-    index: number
-  ) {
-    let listOwners = [...owners];
-    listOwners[index].address = e.target.value;
-    setOwners(listOwners);
-  }
-  async function createWalletHandler() {
-    const ownerAddrs = owners.map((i) => i.address);
-    // if (walletP) {
-    //   return;
-    // }
-    // const { error, data } = await walletCall({
-    //   name: name,
-    //   numConfirmationsRequired: requiredConfirmarion,
-    //   owners: ownerAddrs,
-    // });
-
-    // if (error) {
-    //   alert(`Error: ${error.message}`);
-    // } else {
-    //   debugger;
-    //   closeCreateWalletForm();
-    //   // use app context update wallet list
-    //   alert("Success");
-    // }
-    // nvdien: gọi qua useAsync ko lấy được data nên thử qua cách gọi API trực tiếp
+  async function createBlindAuctionHander() {
     if (web3) {
-      setPendingCreateWallet(true);
-      const wallet = await createWallet(web3, account, {
-        name: name,
-        numConfirmationsRequired: requiredConfirmarion,
-        owners: ownerAddrs,
+      setPendingCreate(true);
+      const auctionInstance = await createBlindAuction(web3, account, {
+        biddingTime: biddingTime,
+        revealTime: revealTime,
+        beneficiaryAddress: beneficiaryAddress,
       });
-      setPendingCreateWallet(false);
-      addWallet({
-        name: wallet.name,
-        address: wallet.address,
-        balance: Number(wallet.balance),
-        numConfirmationsRequired: wallet.numConfirmationsRequired,
-      });
+      console.log(auctionInstance);
+      setPendingCreate(false);
       closeCreateWalletForm();
-      Swal.fire("Create wallet successfully", "", "success");
+      Swal.fire("Create blind auction successfully", "", "success");
     } else {
       Swal.fire("You must unclock Metamask", "", "warning");
     }
@@ -157,93 +82,52 @@ const CreateWalletForm: React.FC<Props> = ({ closeCreateWalletForm }) => {
     <div className="base-form-mask">
       <div className="create-wallet-form">
         <div className="form-header">
-          <h1> Deploy new wallet</h1>
+          <h1> Create new blind auction</h1>
         </div>
         <div className="form-body">
           <Form>
             <Form.Field>
-              <label>Name</label>
-              <Form.Input
-                placeholder=""
-                type="text"
-                min={0}
-                value={name}
-                onChange={changeName}
-              />
-              <label>Required confirmations</label>
+              <label>Bidding time (s)</label>
               <Form.Input
                 placeholder=""
                 type="number"
                 min={0}
-                value={requiredConfirmarion}
-                onChange={changeRequiredConfirmation}
+                value={biddingTime}
+                onChange={changeBiddingTime}
+              />
+              <label>Reveal time (s)</label>
+              <Form.Input
+                placeholder=""
+                type="number"
+                min={0}
+                value={revealTime}
+                onChange={changeRevealTime}
+              />
+              <label>Beneficiary Address</label>
+              <Form.Input
+                placeholder=""
+                type="text"
+                min={0}
+                value={beneficiaryAddress}
+                onChange={changeBeneficiaryAddress}
               />
             </Form.Field>
-            <div className="wallet-header">
-              <h3>Owners</h3>
-              <div>
-                <Button inverted color="blue" onClick={addOwner}>
-                  Add
-                </Button>
-              </div>
-            </div>
-            <table className="ui selectable table wallet-table">
-              <thead>
-                <tr>
-                  <th className="three wide">Name</th>
-                  <th className="five wide">Address</th>
-                  <th className="two wide">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {owners.map((owner, index) => {
-                  return (
-                    <tr key={owner.address}>
-                      <td>
-                        <input
-                          type="text"
-                          value={owner.name}
-                          onChange={(e) => changeOwnerName(e, index)}
-                        />
-                      </td>
-                      <td>
-                        <input
-                          type="text"
-                          value={owner.address}
-                          onChange={(e) => changeOwnerAddress(e, index)}
-                        />
-                      </td>
-                      <td>
-                        <Button
-                          color="red"
-                          disabled={pendingCreateWallet}
-                          loading={pendingCreateWallet}
-                          onClick={() => removeOwner(index)}
-                        >
-                          Remove
-                        </Button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
           </Form>
         </div>
 
         <div className="form-footer">
           <Button
             color="blue"
-            disabled={pendingCreateWallet}
-            loading={pendingCreateWallet}
-            onClick={createWalletHandler}
+            disabled={pendingCreate}
+            loading={pendingCreate}
+            onClick={createBlindAuctionHander}
           >
             Create
           </Button>
           <Button
             color="red"
-            disabled={pendingCreateWallet}
-            loading={pendingCreateWallet}
+            disabled={pendingCreate}
+            loading={pendingCreate}
             onClick={closeCreateWalletForm}
           >
             Cancel
