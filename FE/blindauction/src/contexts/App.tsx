@@ -36,16 +36,18 @@ interface Set {
   };
 }
 interface Auction{
-  biddingTime: number;
-  revealTime: number;
-  beneficiaryAddress: string;
+  biddingEnd: number;
+  revealEnd: number;
+  beneficiary: string;
+  address: string;
 }
 interface AddBlindAuction {
   type: "ADD_AUCTION";
   data: {
-    biddingTime: number;
-    revealTime: number;
-    beneficiaryAddress: string;
+    biddingEnd: number;
+    revealEnd: number;
+    beneficiary: string;
+    address:string;
   };
 }
 
@@ -82,12 +84,12 @@ function reducer(state: State = INIT_STATE, action: Action) {
         "auctions",
         JSON.stringify({
           ...state,
-          wallets: [...state.auctions, action.data],
+          auctions: [...state.auctions, action.data],
         })
       );
       return {
         ...state,
-        wallets: [...state.auctions, action.data],
+        auctions: [...state.auctions, action.data],
       };
     }
     case UPDATE_BALANCE: {
@@ -124,9 +126,10 @@ interface SetInputs {
 }
 
 interface CreateAuctionInputs {
-  biddingTime: number;
-  revealTime: number;
-  beneficiaryAddress: string;
+  biddingEnd: number;
+  revealEnd: number;
+  beneficiary: string;
+  address:string
 }
 interface UpdateBalanceInputs {
   address: string;

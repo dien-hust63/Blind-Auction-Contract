@@ -10,7 +10,7 @@ import "../../css/form/createwallet.css";
 import { createBlindAuction } from "../../api/blindauction";
 import Swal from "sweetalert2";
 interface Props {
-  closeCreateWalletForm: () => void;
+  closeCreateBlindAuctionForm: () => void;
 }
 
 interface depositParams {
@@ -37,7 +37,7 @@ interface CreateWalletParams {
   owners: string[];
 }
 
-const CreateWalletForm: React.FC<Props> = ({ closeCreateWalletForm }) => {
+const CreateBlindAuctionForm: React.FC<Props> = ({ closeCreateBlindAuctionForm }) => {
   const {
     state: { web3, account },
   } = useWeb3Context();
@@ -71,7 +71,7 @@ const CreateWalletForm: React.FC<Props> = ({ closeCreateWalletForm }) => {
       });
       console.log(auctionInstance);
       setPendingCreate(false);
-      closeCreateWalletForm();
+      closeCreateBlindAuctionForm();
       Swal.fire("Create blind auction successfully", "", "success");
     } else {
       Swal.fire("You must unclock Metamask", "", "warning");
@@ -128,7 +128,7 @@ const CreateWalletForm: React.FC<Props> = ({ closeCreateWalletForm }) => {
             color="red"
             disabled={pendingCreate}
             loading={pendingCreate}
-            onClick={closeCreateWalletForm}
+            onClick={closeCreateBlindAuctionForm}
           >
             Cancel
           </Button>
@@ -138,4 +138,4 @@ const CreateWalletForm: React.FC<Props> = ({ closeCreateWalletForm }) => {
   );
 };
 
-export default CreateWalletForm;
+export default CreateBlindAuctionForm;

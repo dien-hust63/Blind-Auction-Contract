@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import moment from "moment";
 import { Button, Message } from "semantic-ui-react";
 import { unlockAccount } from "../api/web3";
 import "./index.css";
@@ -7,7 +8,7 @@ import { useWeb3Context } from "../contexts/Web3";
 import MultiSigWallet from "./MultiSigWallet";
 import Header from "./components/Header";
 import Network from "./Network";
-import CreateWalletForm from "./Form/CreateWallet";
+import CreateBlindAuctionForm from "./Form/CreateBlindAuction";
 import WalletDetail from "./components/WalletDetail";
 import DepositForm from "./Form/DepositForm";
 import WithdrawForm from "./Form/WithDrawForm";
@@ -18,10 +19,18 @@ import { get } from "../api/wallet";
 import { getTokenListInfo } from "../api/token";
 import ImportWalletForm from "./Form/ImportWallet";
 import Swal from "sweetalert2";
+import AuctionDetail from "./components/AuctionDetail";
 
 interface TokenListInputs {
   wallet: string;
   tokens: string[];
+}
+
+interface Auction {
+  biddingEnd: number;
+  revealEnd: number;
+  beneficiary: string;
+  address: string;
 }
 
 function App() {
@@ -34,9 +43,9 @@ function App() {
     state: { auctions },
     createBlindAuction,
   } = useAppContext();
-
   const { state, set, updateTokenDetailList } = useMultiSigWalletContext();
   const [chosenWallet, setChosenWallet] = useState("");
+  const [chosenAuction, setChosenAuction] = useState<Auction>({ biddingEnd: 0, revealEnd: 0,beneficiary:"",address:""});
   const [walletOpen, setWalletOpen] = useState(false);
   const [importWallet, setImportWallet] = useState(false);
   const [showMainDisplay, setShowMainDisplay] = useState(true);
@@ -55,7 +64,7 @@ function App() {
     }
   }
 
-  function openCreateWalletForm() {
+  function openCreateBlindAuctionForm() {
     setWalletOpen(true);
   }
 
@@ -91,6 +100,11 @@ function App() {
     if (data) {
       set(data);
     }
+    setShowMainDisplay(false);
+  }
+
+  async function handleClickRow(auction: Auction){
+    setChosenAuction(auction);
     setShowMainDisplay(false);
   }
 
@@ -130,7 +144,7 @@ function App() {
                   >
                     Import
                   </Button>
-                  <Button inverted color="blue" onClick={openCreateWalletForm}>
+                  <Button inverted color="blue" onClick={openCreateBlindAuctionForm}>
                     Create Auction
                   </Button>
                 </div>
@@ -138,17 +152,26 @@ function App() {
               <table className="ui selectable table wallet-table">
                 <thead>
                   <tr>
-                    <th className="th-center">Auction Address</th>
+                    <th>Auction Address</th>
+                    <th>Bidding End</th>
+                    <th>Reveal End</th>
                   </tr>
                 </thead>
                 <tbody>
                 {auctions.length ? (
                     auctions.map((auction) => {
                       return (
-                        <tr key={auction.beneficiaryAddress}>
+                        <tr key={auction.biddingEnd} onClick={() => handleClickRow(auction)}>
                           <td>
-                            {auction.biddingTime}
+                            {auction.address}
                           </td>
+                          <td>
+                            {moment(new Date(auction.biddingEnd*1000)).format('MM/DD/YYYY HH:MM:SS')}
+                          </td>
+                          <td>
+                          {moment(new Date(auction.revealEnd*1000)).format('MM/DD/YYYY HH:MM:SS')}
+                          </td>
+                          
                         </tr>
                       );
                     })
@@ -163,12 +186,12 @@ function App() {
               </table>
             </div>
           ) : (
-            <WalletDetail wallet={chosenWallet} />
+            <AuctionDetail auction={chosenAuction} />
           )}
         </div>
       </div>
       {walletOpen ? (
-        <CreateWalletForm closeCreateWalletForm={() => setWalletOpen(false)} />
+        <CreateBlindAuctionForm closeCreateBlindAuctionForm={() => setWalletOpen(false)} />
       ) : null}
       {depositFormOpen ? (
         <DepositForm
@@ -184,7 +207,7 @@ function App() {
       ) : null}
       {importWallet ? (
         <ImportWalletForm
-          closeImportWallet={() => setImportWallet(false)}
+        closeImportBlindAuction={() => setImportWallet(false)}
           wallet={chosenWallet}
         />
       ) : null}
