@@ -3,6 +3,8 @@ import "../../css/components/auctiondetail.css";
 import moment from "moment";
 import { Button } from "semantic-ui-react";
 import BidForm from "../Form/BidForm";
+import {generateKeyPairSyncCrypto,encryptText} from "../../crypto/crypto.js";
+const { generateKeyPair } = require('crypto');
 interface Props {
     auction:Auction
 }
@@ -17,10 +19,16 @@ interface Auction {
 
 
 const AuctionDetail: React.FC<Props> = ({auction}) => {
-    const [openBid, setOpenBid] = useState(false);
-    function openBidForm() {
-        setOpenBid(true);
-    }
+  const [openBid, setOpenBid] = useState(false);
+  function openBidForm() {
+      setOpenBid(true);
+  }
+  function generateKeyPairBid(){
+    generateKeyPairSyncCrypto();
+    // let blob = new Blob(["Welcome to Websparrow.org."],
+    //             { type: "text/plain;charset=utf-8" });
+    // FileSaver.saveAs(blob, "public_key.pem");
+  }
   return (
     <div className="auction-detail">
         <div>Auction Address: {auction.address}</div>
@@ -32,6 +40,14 @@ const AuctionDetail: React.FC<Props> = ({auction}) => {
             onClick={() => openBidForm()}
             >
             Bid
+        </Button>
+        <div></div>
+        <Button
+            inverted
+            color="blue"
+            onClick={() => generateKeyPairBid()}
+            >
+            Generate public and private key
         </Button>
         {openBid ? (
         <BidForm

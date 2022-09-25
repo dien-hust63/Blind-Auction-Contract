@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import Web3 from "web3";
 import BN from "bn.js";
-import { Button, Form, Radio, Segment } from "semantic-ui-react";
+import { Button, Form, Input, Radio, Segment } from "semantic-ui-react";
 import { useWeb3Context } from "../../contexts/Web3";
-import { getAuctionDetail } from "../../api/blindauction";
+import { bidAuction, getAuctionDetail } from "../../api/blindauction";
 import useAsync from "../../components/useAsync";
-import "../../css/form/importwallet.css";
 import { useAppContext } from "../../contexts/App";
 import Swal from "sweetalert2";
+import "../../css/form/bidform.css";
 
 interface Props {
     closeBidForm: () => void;
@@ -36,26 +36,23 @@ const BidForm: React.FC<Props> = ({ closeBidForm, auction }) => {
   } = useWeb3Context();
   const { createBlindAuction } = useAppContext();
   const [address, setAddressValue] = useState("");
-  const [isFake, setIsFake] = useState(0);
-  const [bid, setBid] = useState<Bid>({value:0,fake:true,secret:"",deposit:0,encrypt:""});
+  const [isFake, setIsFake] = useState(false);
+  const [bid, setBid] = useState<Bid>({value:0,fake:false,secret:"",deposit:0,encrypt:""});
+  const [publicKey, setPublicKey] = useState<string>("");
+  const [privateKey, setPrivateKey] = useState<string>("");
   const [pendingImport, setPendingImport] = useState(false);
 
   async function changeAddressValue(e: React.ChangeEvent<HTMLInputElement>) {
     setAddressValue(e.target.value);
   }
-  async function importBlindAuction() {
+  async function bidAuctionHandler() {
     if (web3) {
       setPendingImport(true);
-      const blindauction = await getAuctionDetail(web3, account, address);
-      createBlindAuction({
-        biddingEnd: blindauction.biddingEnd,
-        revealEnd: blindauction.revealEnd,
-        beneficiary: blindauction.beneficiary,
-        address:blindauction.address
-      });
+      
+      const blindauction = await bidAuction(web3, account, bid, auction.address);
       setPendingImport(false);
       closeBidForm();
-      Swal.fire("Import wallet successfully", "", "success");
+      Swal.fire("Bid auction successfully", "", "success");
     } else {
       Swal.fire("You must unclock Metamask", "", "warning");
     }
@@ -63,27 +60,91 @@ const BidForm: React.FC<Props> = ({ closeBidForm, auction }) => {
 
   return (
     <div className="base-form-mask">
-      <div className="import-wallet-form">
+      <div className="bid-form">
         <div className="form-header">
           <h1>Bid Form</h1>
         </div>
         <div className="form-body">
           <Form>
             <Form.Field>
-              <label>Blind Auction Address</label>
+              <label>Deposit (Wei)</label>
+              <Form.Input
+                placeholder=""
+                type="number"
+                value={bid.deposit}
+                onChange={(e) => {
+                  setBid({
+                    ...bid,
+                    deposit:Number(e.target.value)
+    
+                  })
+                }}
+              />
+
+              <label>Value (Wei)</label>
+              <Form.Input
+                placeholder=""
+                type="number"
+                value={bid.value}
+                onChange={(e) => {
+                  setBid({
+                    ...bid,
+                    value:Number(e.target.value)
+    
+                  })
+                }}
+              />
+
+              <label>Secret</label>
               <Form.Input
                 placeholder=""
                 type="text"
-                value={address}
-                onChange={changeAddressValue}
+                value={bid.secret}
+                onChange={(e) => {
+                  setBid({
+                    ...bid,
+                    secret:e.target.value
+    
+                  })
+                }}
               />
              
             </Form.Field>
-            <Segment compact>
-            <Radio toggle value={isFake} primary/>
-            </Segment>
             
+
           </Form>
+          <div className="b-flex fake-checkbox">
+            <div >Is Fake ?</div>
+            <input type="checkbox" onChange={(e) => {
+                setIsFake(e.target.checked)
+             }}/>
+            
+          </div>
+
+          <Form>
+            <Form.Field>
+              <label>Public Key</label>
+              <Form.Input
+                placeholder=""
+                type="text"
+                value={publicKey}
+                onChange={(e) => {
+                  setPublicKey(e.target.value)
+                }}
+              />
+
+              <label>Private Key</label>
+              <Form.Input
+                placeholder=""
+                type="text"
+                value={privateKey}
+                onChange={(e) => {
+                  setPrivateKey(e.target.value)
+                }}
+              />
+            </Form.Field>
+          </Form>
+          
         </div>
 
         <div className="form-footer">
@@ -91,9 +152,9 @@ const BidForm: React.FC<Props> = ({ closeBidForm, auction }) => {
             color="blue"
             disabled={pendingImport}
             loading={pendingImport}
-            onClick={importBlindAuction}
+            onClick={bidAuctionHandler}
           >
-            Import
+            Bid
           </Button>
           <Button
             color="red"

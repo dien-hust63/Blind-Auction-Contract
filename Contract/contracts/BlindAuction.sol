@@ -82,7 +82,7 @@ contract BlindAuction {
             }
             if (
                 bidToCheck.blindedBid !=
-                keccak256(abi.encodePacked(value, fake, secret))
+                keccak256(abi.encode(value, fake, secret))
             ) {
                 continue;
             }
