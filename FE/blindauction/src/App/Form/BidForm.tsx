@@ -116,35 +116,13 @@ const BidForm: React.FC<Props> = ({ closeBidForm, auction }) => {
           <div className="b-flex fake-checkbox">
             <div >Is Fake ?</div>
             <input type="checkbox" onChange={(e) => {
-                setIsFake(e.target.checked)
+                setBid({
+                  ...bid,
+                  fake: e.target.checked
+                })
              }}/>
             
           </div>
-
-          <Form>
-            <Form.Field>
-              <label>Public Key</label>
-              <Form.Input
-                placeholder=""
-                type="text"
-                value={publicKey}
-                onChange={(e) => {
-                  setPublicKey(e.target.value)
-                }}
-              />
-
-              <label>Private Key</label>
-              <Form.Input
-                placeholder=""
-                type="text"
-                value={privateKey}
-                onChange={(e) => {
-                  setPrivateKey(e.target.value)
-                }}
-              />
-            </Form.Field>
-          </Form>
-          
         </div>
 
         <div className="form-footer">

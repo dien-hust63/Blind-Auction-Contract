@@ -5,7 +5,7 @@ contract BlindAuction {
     struct Bid {
         bytes32 blindedBid;
         uint256 deposit;
-        bytes32 encrypt;
+        string encrypt;
     }
 
     address payable public beneficiary;
@@ -45,7 +45,7 @@ contract BlindAuction {
         revealEnd = biddingEnd + revealTime;
     }
 
-    function bid(bytes32 blindedBid, bytes32 encryptKey)
+    function bid(bytes32 blindedBid, string memory encryptKey)
         external
         payable
         onlyBefore(biddingEnd)
@@ -122,5 +122,9 @@ contract BlindAuction {
         highestBid = value;
         highestBidder = bidder;
         return true;
+    }
+
+    function getListBids(address bidder) public view returns (Bid[] memory) {
+        return bids[bidder];
     }
 }

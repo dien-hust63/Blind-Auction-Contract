@@ -48,7 +48,7 @@ function App() {
   const [chosenAuction, setChosenAuction] = useState<Auction>({ biddingEnd: 0, revealEnd: 0,beneficiary:"",address:""});
   const [walletOpen, setWalletOpen] = useState(false);
   const [importWallet, setImportWallet] = useState(false);
-  const [showMainDisplay, setShowMainDisplay] = useState(false);
+  const [showMainDisplay, setShowMainDisplay] = useState(true);
   const [depositFormOpen, setDepositFormOpen] = useState(false);
   const [withdrawFormOpen, setWithDrawFormOpen] = useState(false);
   const { pending, error, call } = useAsync(unlockAccount);
