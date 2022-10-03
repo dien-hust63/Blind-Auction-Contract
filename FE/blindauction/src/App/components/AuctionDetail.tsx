@@ -3,7 +3,7 @@ import "../../css/components/auctiondetail.css";
 import moment from "moment";
 import { Button } from "semantic-ui-react";
 import BidForm from "../Form/BidForm";
-import { getListBids } from "../../api/blindauction";
+import { auctionEnd, getListBids } from "../../api/blindauction";
 import { useWeb3Context } from "../../contexts/Web3";
 import RevealForm from "../Form/RevealForm";
 const { generateKeyPair } = require('crypto');
@@ -40,6 +40,11 @@ const AuctionDetail: React.FC<Props> = ({auction}) => {
   function openRevealForm(){
     setOpenReveal(true);
   }
+  async function auctionEndHandler(){
+    if(web3){
+      await auctionEnd(web3, account, auction.address);
+    }
+  }
   useEffect(() => {
     if(web3){
       debugger
@@ -69,6 +74,13 @@ const AuctionDetail: React.FC<Props> = ({auction}) => {
             onClick={() => openRevealForm()}
             >
             Reveal
+        </Button>
+        <Button
+            inverted
+            color="blue"
+            onClick={() => auctionEndHandler()}
+            >
+            Auction end
         </Button>
         <h4>History of Bids</h4>
         <table className="ui selectable table wallet-table">

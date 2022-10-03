@@ -12,6 +12,8 @@ contract BlindAuction {
     uint256 public biddingEnd;
     uint256 public revealEnd;
     bool public ended;
+    uint256 public checkFlag;
+    bytes32 public checkKeccak;
 
     mapping(address => Bid[]) public bids;
     mapping(address => uint256) public totalDeposit;
@@ -78,15 +80,19 @@ contract BlindAuction {
                 secrets[i]
             );
             if (fake) {
+                checkFlag = 1;
                 continue;
             }
             if (
                 bidToCheck.blindedBid !=
                 keccak256(abi.encode(value, fake, secret))
             ) {
+                checkFlag = 2;
+                checkKeccak = keccak256(abi.encode(value, fake, secret));
                 continue;
             }
             if (bidToCheck.deposit >= value) {
+                checkFlag = 3;
                 placeBid(msg.sender, value);
             }
             bidToCheck.blindedBid = bytes32(0);
@@ -117,8 +123,10 @@ contract BlindAuction {
         returns (bool success)
     {
         if (value <= highestBid) {
+            checkFlag = 4;
             return false;
         }
+        checkFlag = 5;
         highestBid = value;
         highestBidder = bidder;
         return true;

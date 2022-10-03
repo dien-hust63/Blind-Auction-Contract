@@ -4,6 +4,7 @@ import TruffleContract from "@truffle/contract";
 import blindAuctionJson from "../build/contracts/BlindAuction.json";
 import { decryptCustom, encryptCustom } from "../crypto/metamaskCrypto";
 import { decryptText } from "../crypto/crypto2";
+import { debug } from "console";
 
 // @ts-ignore
 const blindAuction = TruffleContract(blindAuctionJson);
@@ -51,6 +52,7 @@ export async function getAuctionDetail(
     const auctionInstance = await blindAuction.at(auctionAddress);
     const biddingEnd = await auctionInstance.biddingEnd();
     const revealEnd = await auctionInstance.revealEnd();
+    debugger
     const beneficiaryAddress = await auctionInstance.beneficiary();
     const bids = await auctionInstance.getListBids(account);
     return {
@@ -70,7 +72,7 @@ export async function bidAuction(
   blindAuction.setProvider(web3.currentProvider);
   const auctionInstance = await blindAuction.at(auctionAddress);
   const secretText = web3.utils.asciiToHex(bid.secret);
-  let blindedBid = web3.utils.keccak256(web3.eth.abi.encodeParameters(['uint256', 'bool', 'string'],[bid.value,bid.fake,secretText]))
+  let blindedBid = web3.utils.keccak256(web3.eth.abi.encodeParameters(['uint256', 'bool', 'bytes32'],[bid.value,bid.fake,secretText]))
   const encryptText = await encryptCustom(JSON.stringify(bid),account);
   //bid 
   const bidAuction = await auctionInstance.bid(blindedBid,encryptText, { from: account, value:bid.deposit });
@@ -85,6 +87,7 @@ export async function getListBids(
     const auctionInstance = await blindAuction.at(auctionAddress);
     let listBidsDecrypt = [];
     const listBids = await auctionInstance.getListBids(account);
+    debugger
     for(let i=0; i < listBids.length; ++i){
       let decryptText = await decryptCustom(listBids[i].encrypt, account);
       listBidsDecrypt.push(JSON.parse(decryptText));
@@ -103,7 +106,7 @@ export async function reveal(
   let valueList = [];
   let fakeList = [];
   let secretList = [];
-  debugger
+  
   for (let index = 0; index < bids.length; index++) {
     const element = bids[index];
     valueList.push(bids[index].value);
@@ -111,6 +114,24 @@ export async function reveal(
     secretList.push(web3.utils.asciiToHex(bids[index].secret));
   }
   await auctionInstance.reveal(valueList, fakeList, secretList,{from:account});
+  
+}
+
+export async function  auctionEnd(
+  web3: Web3,
+  account: string,
+  auctionAddress: string
+){
+  blindAuction.setProvider(web3.currentProvider);
+  const auctionInstance = await blindAuction.at(auctionAddress);
+  const highestBidder = await auctionInstance.highestBidder();
+  const highestBid = await auctionInstance.highestBid();
+  const flag = await auctionInstance.checkFlag();
+  const checkKec = await auctionInstance.checkKeccak();
+  let test = web3.utils.asciiToHex('fsd');
+  let blindedBid = web3.utils.keccak256(web3.eth.abi.encodeParameters(['uint256', 'bool', 'bytes32'],[350,false,web3.utils.asciiToHex('fsd')]))
+  debugger
+  await auctionInstance.auctionEnd({from:account});
 }
   
 
