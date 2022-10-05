@@ -24,6 +24,12 @@ interface Bid {
   encrypt: string;
 }
 
+interface AuctionEnd{
+  highestBid:number;
+  highestBidder: string;
+  totalDeposit: number;
+}
+
 export async function createBlindAuction(
     web3: Web3,
     account: string,
@@ -121,17 +127,32 @@ export async function  auctionEnd(
   web3: Web3,
   account: string,
   auctionAddress: string
-){
+):Promise<AuctionEnd>{
   blindAuction.setProvider(web3.currentProvider);
   const auctionInstance = await blindAuction.at(auctionAddress);
   const highestBidder = await auctionInstance.highestBidder();
   const highestBid = await auctionInstance.highestBid();
-  const flag = await auctionInstance.checkFlag();
-  const checkKec = await auctionInstance.checkKeccak();
-  let test = web3.utils.asciiToHex('fsd');
-  let blindedBid = web3.utils.keccak256(web3.eth.abi.encodeParameters(['uint256', 'bool', 'bytes32'],[350,false,web3.utils.asciiToHex('fsd')]))
+  const ended = await auctionInstance.ended();
   debugger
-  await auctionInstance.auctionEnd({from:account});
+  const totalDeposit = await auctionInstance.getTotalDeposit();
+  if(!ended){
+    await auctionInstance.auctionEnd({from:account});
+  }
+  return {
+    highestBid: highestBid,
+    highestBidder: highestBidder,
+    totalDeposit: totalDeposit
+  }
+}
+
+export async function  withDraw(
+  web3: Web3,
+  account: string,
+  auctionAddress: string
+){
+  blindAuction.setProvider(web3.currentProvider);
+  const auctionInstance = await blindAuction.at(auctionAddress);
+  await auctionInstance.withdraw({from:account});
 }
   
 

@@ -3,9 +3,10 @@ import "../../css/components/auctiondetail.css";
 import moment from "moment";
 import { Button } from "semantic-ui-react";
 import BidForm from "../Form/BidForm";
-import { auctionEnd, getListBids } from "../../api/blindauction";
+import { auctionEnd, getListBids, withDraw } from "../../api/blindauction";
 import { useWeb3Context } from "../../contexts/Web3";
 import RevealForm from "../Form/RevealForm";
+import Swal from "sweetalert2";
 const { generateKeyPair } = require('crypto');
 const {ethSig,test} = require("../../crypto/metamaskCrypto");
 interface Props {
@@ -27,12 +28,21 @@ interface Bid {
   encrypt: string;
 }
 
+interface AuctionEnd{
+  highestBid:number;
+  highestBidder: string;
+  totalDeposit: number;
+}
+
 const AuctionDetail: React.FC<Props> = ({auction}) => {
   const {
     state: { web3, account, netId }
   } = useWeb3Context();
   const [openBid, setOpenBid] = useState(false);
   const [openReveal, setOpenReveal] = useState(false);
+  const [highestBidder, setHighestBidder] = useState("");
+  const [highestBid, setHighestBid] = useState(0);
+  const [totalDeposit, setTotalDeposit] = useState(0);
   const [bids, setBids] = useState<Bid[]>([]);
   function openBidForm() {
       setOpenBid(true);
@@ -40,9 +50,18 @@ const AuctionDetail: React.FC<Props> = ({auction}) => {
   function openRevealForm(){
     setOpenReveal(true);
   }
+  async function withdrawHandler(){
+    if(web3){
+      await withDraw(web3, account, auction.address);
+      Swal.fire("Withdraw successfully", "", "success");
+    }
+  }
   async function auctionEndHandler(){
     if(web3){
-      await auctionEnd(web3, account, auction.address);
+      const auctionEndInstance = await auctionEnd(web3, account, auction.address);
+      setHighestBid(auctionEndInstance.highestBid);
+      setHighestBidder(auctionEndInstance.highestBidder);
+      setTotalDeposit(auctionEndInstance.totalDeposit);
     }
   }
   useEffect(() => {
@@ -125,6 +144,18 @@ const AuctionDetail: React.FC<Props> = ({auction}) => {
                   )}
                 </tbody>
         </table>
+        <h3>Result</h3>
+        <div><b>Highest bidder: </b><span>{highestBidder}</span></div>
+        <div><b>Highest Bid: </b><span>{highestBid}</span></div>
+        <div><b>Total Deposit Remain: </b><span>{totalDeposit}</span></div>
+        <Button
+            inverted
+            color="blue"
+            onClick={() => withdrawHandler()}
+            >
+            WithDraw
+        </Button>
+        
         {openBid ? (
         <BidForm
           closeBidForm={() => setOpenBid(false)}
@@ -144,3 +175,4 @@ const AuctionDetail: React.FC<Props> = ({auction}) => {
 };
 
 export default AuctionDetail;
+
